@@ -1,0 +1,5 @@
+EMAIL = "saumya046btece22@igdtuw.ac.in"
+API_TOKEN = "***"
+DOMAIN = "https://igdtuw-team-lznfyyiz.atlassian.net"
+PROJECT_KEY = "KAN"
+OLLAMA_MODEL = "mistral"
