@@ -23,17 +23,17 @@ def chatbot():
         if user_input == 'help':
             print("""
 Commands:
-- list: Show all current ticket keys and summaries
+- all: Show all tickets
 - open: Show open tickets
 - closed: Show closed tickets
-- all: Refresh and show all tickets
 - summarize <TICKET_KEY>: Show summary and description
 - analyze <TICKET_KEY>: Run AI analysis
 - comment <TICKET_KEY>: Run AI analysis and comment on Jira
 """)
             continue
 
-        if user_input == 'list':
+        if user_input == 'all':
+            tickets = fetch_jira_tickets()
             for t in tickets:
                 print(f"{t['key']}: {t['summary']}")
             continue
@@ -47,12 +47,6 @@ Commands:
         if user_input == 'closed':
             closed_tickets = fetch_jira_tickets("statusCategory = Done")
             for t in closed_tickets:
-                print(f"{t['key']}: {t['summary']}")
-            continue
-
-        if user_input == 'all':
-            tickets = fetch_jira_tickets()
-            for t in tickets:
                 print(f"{t['key']}: {t['summary']}")
             continue
 
@@ -91,3 +85,4 @@ Commands:
 
 if __name__ == "__main__":
     chatbot()
+
