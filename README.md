@@ -127,6 +127,7 @@ jira-ai-chatbot/
 ## 👩‍💻 Author
 
 **Saumya Mathur**
+
 [LinkedIn](https://www.linkedin.com/in/saumya-mathur-60351a270/)
 
 
