@@ -1,8 +1,4 @@
-Here’s your updated **README.md** with the **auto-assign functionality** included:
 
----
-
-````markdown
 # 🤖 Jira AI Chatbot
 
 An intelligent command-line chatbot that integrates with **Jira** and a **language model** to analyze, summarize, comment, and assign Jira tickets.
