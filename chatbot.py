@@ -2,7 +2,7 @@ from jira_client import fetch_jira_tickets, add_comment_to_ticket
 from llm_chain import analyze_ticket
 from auto_assign import auto_assign_all, auto_assign_ticket_to_least_loaded
 from config import PROJECT_KEY
-
+from handle_natural_query import handle_natural_query
 def get_ticket_by_key(tickets, key):
     for ticket in tickets:
         if ticket["key"].lower() == key.lower():
@@ -32,6 +32,7 @@ Commands:
 - analyze <TICKET_KEY>: Run AI analysis
 - comment <TICKET_KEY>: Run AI analysis and comment on Jira
 - auto assign: Automatically assigns unassigned tickets to users with the fewest currently assigned tickets.
+- ask <question>: Ask a natural language question (e.g., "Which tickets are unassigned?")
 """)
             continue
 
@@ -107,9 +108,22 @@ Commands:
                 print("❌ Usage: auto assign <TICKET_KEY> or auto assign")
 
             continue
+        elif user_input.startswith('ask '):
+            query = user_input[4:]
+            jql = handle_natural_query(query)
+            if jql:
+                results = fetch_jira_tickets(jql)
+                if results:
+                    for t in results:
+                        print(f"{t['key']}: {t['summary']}")
+                else:
+                    print("No matching tickets found.")
+            else:
+                print("❌ Sorry, I couldn’t understand that query.")
+                continue
+
         else:
             print("❓ Unknown command. Type 'help' for options.")
 
 if __name__ == "__main__":
     chatbot()
-
