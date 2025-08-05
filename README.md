@@ -44,7 +44,8 @@ pip install -r requirements.txt
 EMAIL = "your-email@example.com"
 API_TOKEN = "your-jira-api-token"
 DOMAIN = "https://your-domain.atlassian.net"
-PROJECT_KEY = "your project key"  
+PROJECT_KEY = "your project key"
+OLLAMA_MODEL = "mistral"
 ```
 
 ---
