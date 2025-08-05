@@ -12,7 +12,10 @@ This tool helps streamline ticket management by offering quick insights and upda
 * 📄 **Summarize** Jira tickets  
 * 🧠 **AI analysis** of issue descriptions  
 * 💬 **Auto-comment** on tickets with AI-generated suggestions  
-* 🧑‍💼 **Auto-assign** tickets based on least workload using load balancing  
+* 🧑‍💼 **Auto-assign** tickets based on least workload using load balancing
+* 🗣️ **Ask questions in natural language** (e.g., “Show me high priority tickets”) and get filtered results via smart JQL mapping
+
+
 
 ---
 
@@ -83,7 +86,9 @@ analyze <TICKET_KEY>            Run AI analysis on the ticket
 comment <TICKET_KEY>            Analyze and comment on Jira ticket  
 
 assign <TICKET_KEY>             Auto-assign ticket to least-loaded user  
-auto assign                     Auto-assign all unassigned tickets  
+auto assign                     Auto-assign all unassigned tickets
+ask                             Ask questions in natural language 
+ 
 ```
 
 **Example:**
@@ -116,7 +121,8 @@ jira-ai-chatbot/
 ├── chatbot.py            # Main CLI chatbot  
 ├── auto_assign.py        # Load-balanced ticket assignment logic  
 ├── jira_client.py        # Jira API interactions  
-├── llm_chain.py          # LLM analysis logic  
+├── llm_chain.py          # LLM analysis logic
+├── handle_natural_query  # NLQ logic
 ├── config.py             # Your Jira credentials and settings  
 ├── main.py               # Powers the chatbot  
 └── README.md             # Project info  
