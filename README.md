@@ -108,3 +108,8 @@ jira-ai-chatbot/
 **Saumya Mathur**
 
 [LinkedIn](https://www.linkedin.com/in/saumya-mathur-60351a270/) 
+
+**Kriti Khurana**
+
+[LinkedIn](https://www.linkedin.com/in/kriti-khurana-24b059286/) 
+
