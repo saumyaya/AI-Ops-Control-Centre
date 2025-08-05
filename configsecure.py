@@ -1,5 +1,6 @@
-EMAIL = "saumya046btece22@igdtuw.ac.in"
-API_TOKEN = "***"
-DOMAIN = "https://igdtuw-team-lznfyyiz.atlassian.net"
-PROJECT_KEY = "KAN"
+EMAIL = "your email"
+API_TOKEN = "your api token"
+DOMAIN = "your domain name"
+PROJECT_KEY = "your project key"
 OLLAMA_MODEL = "mistral"
+
