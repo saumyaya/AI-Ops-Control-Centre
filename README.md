@@ -1,8 +1,4 @@
-Here’s your **final, polished README.md** for the optimized **Jira AI Chatbot** project:
 
----
-
-````markdown
 # 🤖 Jira AI Chatbot
 
 An intelligent command-line assistant that integrates **Jira** with a **local LLM (like Ollama Mistral)** to **analyze**, **summarize**, **auto-assign**, **comment**, and **filter tickets using natural language**.  
