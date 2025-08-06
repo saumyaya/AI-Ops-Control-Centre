@@ -1,30 +1,35 @@
+Here’s your **final, polished README.md** for the optimized **Jira AI Chatbot** project:
 
+---
+
+````markdown
 # 🤖 Jira AI Chatbot
 
-An intelligent command-line chatbot that integrates with **Jira** and a **language model** to analyze, summarize, comment, and assign Jira tickets.
-This tool helps streamline ticket management by offering quick insights and updates using natural language understanding.
+An intelligent command-line assistant that integrates **Jira** with a **local LLM (like Ollama Mistral)** to **analyze**, **summarize**, **auto-assign**, **comment**, and **filter tickets using natural language**.  
+This tool streamlines DevOps workflows by combining smart JQL handling with LLM-powered analysis and RAG-based suggestions.
 
 ---
 
 ## 🚀 Features
 
-* 🔍 **List tickets** by status: all, open, or closed  
-* 📄 **Summarize** Jira tickets  
-* 🧠 **AI analysis** of issue descriptions  
-* 💬 **Auto-comment** on tickets with AI-generated suggestions  
-* 🧑‍💼 **Auto-assign** tickets based on least workload using load balancing
-* 🗣️ **Ask questions in natural language** (e.g., “Show me high priority tickets”) and get filtered results via smart JQL mapping
-
-
+- 🔍 **List tickets** by status: all, open, or closed  
+- 📄 **Summarize** Jira tickets quickly  
+- 🧠 **AI-based ticket analysis** using LLM  
+- 💬 **Auto-comment** on tickets with AI-generated insights  
+- 🧑‍💼 **Auto-assign tickets** using load balancing  
+- 🗣️ **Natural Language Questions** like “Which tickets are unassigned?” or “Show high priority issues”  
+- 📎 **RAG-based suggestions** from similar past tickets for better recommendations
 
 ---
 
 ## 🧠 Tech Stack
 
-* Python 3.x  
-* Jira REST API (v3)  
-* Basic Auth (Email + API Token)  
-* Ollama Mistral LLM (or any compatible local model)  
+- Python 3.x  
+- Jira REST API v3  
+- Ollama (Mistral or compatible local LLM)  
+- LangChain + Sentence Transformers + FAISS  
+- Concurrent caching for speed optimization  
+- Command-line interface (CLI) based interaction
 
 ---
 
@@ -43,20 +48,26 @@ cd jira-ai-chatbot
 pip install -r requirements.txt
 ```
 
-3. **Create a `config.py` file:**
+3. **Configure credentials:**
+   Create a file called `config.py` with the following content:
 
 ```python
 EMAIL = "your-email@example.com"
 API_TOKEN = "your-jira-api-token"
 DOMAIN = "https://your-domain.atlassian.net"
-PROJECT_KEY = "your project key"
+PROJECT_KEY = "KAN"  # Replace with your actual Jira project key
 OLLAMA_MODEL = "mistral"
 
 ASSIGNEES = {
     "user1@example.com": "accountId1",
-    "user2@example.com": "accountId2",
-    ...
+    "user2@example.com": "accountId2"
 }
+```
+
+4. **(Optional) Build FAISS index for RAG:**
+
+```bash
+python build_index.py
 ```
 
 ---
@@ -73,43 +84,43 @@ python chatbot.py
 
 ## 🔧 Commands
 
-```
-help                            Show available commands  
-exit / quit                     Exit the chatbot  
+| Command                    | Description                                                               |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `help`                     | Show available commands                                                   |
+| `exit` / `quit`            | Exit the chatbot                                                          |
+| `refresh`                  | Reload latest ticket data                                                 |
+| `all`                      | Show all Jira tickets                                                     |
+| `open`                     | Show only open (incomplete) tickets                                       |
+| `closed`                   | Show only completed/closed tickets                                        |
+| `summarize <TICKET_KEY>`   | Show summary and description of a ticket                                  |
+| `analyze <TICKET_KEY>`     | AI-powered analysis for resolution suggestions                            |
+| `comment <TICKET_KEY>`     | AI analysis and auto-comment on Jira ticket                               |
+| `suggest <TICKET_KEY>`     | RAG-based suggestion from similar past tickets                            |
+| `auto assign`              | Assign all unassigned tickets using least-loaded strategy                 |
+| `auto assign <TICKET_KEY>` | Assign a specific ticket to the least-loaded user                         |
+| `ask <natural question>`   | Natural language question → JQL-based filter (e.g., "tickets with login") |
 
-all                             Show all tickets  
-open                            Show only open tickets  
-closed                          Show only closed tickets  
+---
 
-summarize <TICKET_KEY>          Show summary and description  
-analyze <TICKET_KEY>            Run AI analysis on the ticket  
-comment <TICKET_KEY>            Analyze and comment on Jira ticket  
+## 🧪 Examples
 
-assign <TICKET_KEY>             Auto-assign ticket to least-loaded user  
-auto assign                     Auto-assign all unassigned tickets
-ask                             Ask questions in natural language 
- 
-```
-
-**Example:**
-
-```
+```bash
 You > open  
-KAN-58: Load balancer health check failed for instance B  
+KAN-102: Database error on user registration  
 
-You > analyze KAN-58  
+You > analyze KAN-102  
 🧠 AI Suggestion:  
-Investigate health probe configuration or backend instance stability.  
+Check if DB pool is saturated. Review recent schema changes.
 
-You > comment KAN-58  
-✅ Comment added to KAN-58  
-
-You > assign KAN-58  
-✅ Assigned KAN-58 to user2@example.com  
+You > comment KAN-102  
+✅ Comment added to KAN-102
 
 You > auto assign  
-🔄 Running auto assignment...  
-✅ Assigned KAN-59 to user1@example.com  
+✅ Assigned KAN-103 to user1@example.com  
+✅ Assigned KAN-104 to user2@example.com
+
+You > ask tickets with health check failure  
+KAN-105: ELB health probe failing on instance A
 ```
 
 ---
@@ -118,15 +129,26 @@ You > auto assign
 
 ```
 jira-ai-chatbot/
-├── chatbot.py            # Main CLI chatbot  
-├── auto_assign.py        # Load-balanced ticket assignment logic  
-├── jira_client.py        # Jira API interactions  
-├── llm_chain.py          # LLM analysis logic
-├── handle_natural_query  # NLQ logic
-├── config.py             # Your Jira credentials and settings  
-├── main.py               # Powers the chatbot  
-└── README.md             # Project info  
+├── chatbot.py              # CLI chatbot logic
+├── llm_chain.py            # LLM + RAG-based analysis
+├── auto_assign.py          # Workload-based assignment logic
+├── build_index.py          # Builds FAISS index for semantic similarity
+├── rag_utils.py            # Search similar tickets with Sentence Transformers + FAISS
+├── handle_natural_query.py # Natural language → JQL mapping
+├── jira_client.py          # Jira REST API helper functions
+├── config.py               # Your credentials + model settings
+├── ticket_index.faiss      # (Generated) Vector index file
+├── ticket_keys.pkl        # (Generated) Index to ticket mapping
+└── README.md               # Project documentation
 ```
+
+---
+
+## ⚡ Performance Tips
+
+* ✅ Uses **lazy loading** for FAISS, LangChain, and Ollama to reduce startup time
+* ✅ LLM results are **threaded and cached** for faster reuse
+* ✅ Add `refresh` to reload latest Jira data when needed
 
 ---
 
