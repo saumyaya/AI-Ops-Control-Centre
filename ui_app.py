@@ -1,9 +1,14 @@
 import streamlit as st
-from jira_client import fetch_jira_tickets
+from jira_client import fetch_jira_tickets, add_comment_to_ticket
 from auto_assign import auto_assign_all, auto_assign_ticket_to_least_loaded
 from handle_natural_query import handle_natural_query
 
-# Helper to flatten Jira API tickets into easy dicts
+# Lazy load RAG + LLM
+def analyze_ticket_lazy(ticket):
+    from llm_chain import analyze_ticket
+    return analyze_ticket(ticket)
+
+# Helper to flatten Jira API tickets
 def flatten_tickets(jira_tickets):
     flat_list = []
     for t in jira_tickets:
@@ -18,60 +23,122 @@ def flatten_tickets(jira_tickets):
         flat_list.append({
             "key": t.get("key", ""),
             "summary": summary,
-            "description": description
+            "description": description,
+            "raw": t
         })
     return flat_list
 
 st.set_page_config(page_title="Jira AI Chatbot UI", layout="wide")
-
 st.title("🤖 Jira AI Chatbot (UI Version)")
-st.write("Manage Jira tickets with AI-powered suggestions, summaries, and automation.")
 
-# Sidebar Navigation
-menu = st.sidebar.selectbox(
-    "Choose a Command",
-    ["All Tickets", "Open Tickets", "Closed Tickets", "Auto Assign All", "Ask Query"]
+# Sidebar Menu
+menu = st.sidebar.radio(
+    "📋 Menu",
+    [
+        "📋 All",
+        "🟢 Open",
+        "🔴 Closed",
+        "📄 Summarize",
+        "🧠 Analyze",
+        "💬 Comment",
+        "📌 Suggest",
+        "🧑‍💼 Auto Assign",
+        "❓ Ask",
+        "🔄 Refresh"
+    ]
 )
 
-if menu == "All Tickets":
+if menu == "📋 All":
     tickets = flatten_tickets(fetch_jira_tickets())
-    if tickets:
-        for t in tickets:
-            st.write(f"**{t['key']}** — {t['summary']}")
-    else:
-        st.warning("No tickets found.")
+    for t in tickets:
+        st.subheader(f"{t['key']} — {t['summary']}")
+        st.write(t['description'])
 
-elif menu == "Open Tickets":
+elif menu == "🟢 Open":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory != Done"))
-    if tickets:
-        for t in tickets:
-            st.write(f"**{t['key']}** — {t['summary']}")
-    else:
-        st.warning("No open tickets found.")
+    for t in tickets:
+        st.subheader(f"{t['key']} — {t['summary']}")
+        st.write(t['description'])
 
-elif menu == "Closed Tickets":
+elif menu == "🔴 Closed":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory = Done"))
-    if tickets:
-        for t in tickets:
-            st.write(f"**{t['key']}** — {t['summary']}")
-    else:
-        st.warning("No closed tickets found.")
+    for t in tickets:
+        st.subheader(f"{t['key']} — {t['summary']}")
+        st.write(t['description'])
 
-elif menu == "Auto Assign All":
-    if st.button("Run Auto Assignment"):
+elif menu == "📄 Summarize":
+    ticket_key = st.text_input("Enter Ticket Key to Summarize:")
+    if st.button("Summarize"):
+        tickets = flatten_tickets(fetch_jira_tickets())
+        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        if ticket:
+            st.write(f"**Summary:** {ticket['summary']}")
+            st.write(f"**Description:** {ticket['description']}")
+        else:
+            st.error("Ticket not found.")
+
+elif menu == "🧠 Analyze":
+    ticket_key = st.text_input("Enter Ticket Key to Analyze:")
+    if st.button("Analyze"):
+        tickets = flatten_tickets(fetch_jira_tickets())
+        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        if ticket:
+            result = analyze_ticket_lazy(ticket['raw'])
+            st.success("AI Suggestion:")
+            st.write(result)
+        else:
+            st.error("Ticket not found.")
+
+elif menu == "💬 Comment":
+    ticket_key = st.text_input("Enter Ticket Key to Comment:")
+    if st.button("Add Comment"):
+        tickets = flatten_tickets(fetch_jira_tickets())
+        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        if ticket:
+            result = analyze_ticket_lazy(ticket['raw'])
+            add_comment_to_ticket(ticket['key'], result)
+            st.success(f"✅ Comment added to {ticket['key']}")
+        else:
+            st.error("Ticket not found.")
+
+elif menu == "📌 Suggest":
+    ticket_key = st.text_input("Enter Ticket Key for Suggestions:")
+    if st.button("Suggest"):
+        tickets = flatten_tickets(fetch_jira_tickets())
+        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        if ticket:
+            result = analyze_ticket_lazy(ticket['raw'])
+            st.success("📌 Suggested Next Steps:")
+            st.write(result)
+        else:
+            st.error("Ticket not found.")
+
+elif menu == "🧑‍💼 Auto Assign":
+    if st.button("Auto Assign All Unassigned Tickets"):
         auto_assign_all()
+        st.success("Auto assignment completed.")
 
-elif menu == "Ask Query":
-    user_query = st.text_input("Ask a natural language question about tickets:")
+    ticket_key = st.text_input("Or enter a Ticket Key to auto-assign:")
+    if st.button("Auto Assign This Ticket"):
+        auto_assign_ticket_to_least_loaded(ticket_key)
+        st.success(f"Auto-assigned {ticket_key}")
+
+elif menu == "❓ Ask":
+    query = st.text_input("Ask a question about tickets:")
     if st.button("Run Query"):
-        jql = handle_natural_query(user_query)
+        jql = handle_natural_query(query)
         if jql:
-            results = flatten_tickets(fetch_jira_tickets(jql))
-            if results:
-                for t in results:
-                    st.write(f"**{t['key']}** — {t['summary']}")
+            tickets = flatten_tickets(fetch_jira_tickets(jql))
+            if tickets:
+                for t in tickets:
+                    st.subheader(f"{t['key']} — {t['summary']}")
+                    st.write(t['description'])
             else:
                 st.warning("No matching tickets found.")
         else:
-            st.error("❌ Could not understand the query.")
+            st.error("Could not understand your query.")
 
+elif menu == "🔄 Refresh":
+    st.info("Refreshing ticket data...")
+    st.cache_data.clear()
+    st.success("Refreshed successfully!")
