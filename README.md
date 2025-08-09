@@ -1,150 +1,116 @@
+# 📊 Jira AI Control Centre (Streamlit UI)
 
-# 🤖 Jira AI Chatbot
-
-An intelligent command-line assistant that integrates **Jira** with a **local LLM (like Ollama Mistral)** to **analyze**, **summarize**, **auto-assign**, **comment**, and **filter tickets using natural language**.  
-This tool streamlines DevOps workflows by combining smart JQL handling with LLM-powered analysis and RAG-based suggestions.
-
+* An **AI-powered Jira dashboard** with an intuitive **web UI** built in **Streamlit**.
+It combines Jira’s ticketing system with **local LLM analysis** to help teams **view, analyze, comment, and assign tickets** with ease.
+* [Click here](https://ai-ops-control-centre-vn6kkepdzfbwbai7bbtjpf.streamlit.app/)
 ---
 
 ## 🚀 Features
 
-- 🔍 **List tickets** by status: all, open, or closed  
-- 📄 **Summarize** Jira tickets quickly  
-- 🧠 **AI-based ticket analysis** using LLM  
-- 💬 **Auto-comment** on tickets with AI-generated insights  
-- 🧑‍💼 **Auto-assign tickets** using load balancing  
-- 🗣️ **Natural Language Questions** like “Which tickets are unassigned?” or “Show high priority issues”  
-- 📎 **RAG-based suggestions** from similar past tickets for better recommendations
+### 📋 Ticket Management
+
+* **All Tickets** — View all Jira tickets in the project
+* **Open Tickets** — Show tickets not marked as Done
+* **Closed Tickets** — Show completed tickets
+
+### 📝 Ticket Actions
+
+* **Summarize** — Display the summary & description of a ticket
+* **Analyze** — AI-generated analysis of a ticket's content
+* **Comment** — Post AI suggestions directly as a Jira comment
+* **Suggest** — Get RAG-powered recommendations using similar past tickets
+
+### 🧑‍💼 Assignment
+
+* **Auto Assign** — Distribute unassigned tickets to least-loaded team members
+* **Auto Assign Specific** — Assign a chosen ticket to the least-loaded user
+
+### ❓ Natural Language Queries
+
+* Ask in plain English (e.g., *"Show me high priority tickets"*) and get filtered Jira results
+
+### 🔄 Live Updates
+
+* **Refresh** — Reload Jira data without restarting the app
 
 ---
 
 ## 🧠 Tech Stack
 
-- Python 3.x  
-- Jira REST API v3  
-- Ollama (Mistral or compatible local LLM)  
-- LangChain + Sentence Transformers + FAISS  
-- Concurrent caching for speed optimization  
-- Command-line interface (CLI) based interaction
+* **Python 3.x**
+* **Streamlit** (UI)
+* **Jira REST API v3** (ticket management)
+* **Ollama LLM** (local AI model for analysis)
+* **FAISS + Sentence Transformers** (RAG for similar ticket retrieval)
 
 ---
 
-## 🛠️ Installation
+## 🛠 Installation
 
-1. **Clone the repository:**
+### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/jira-ai-chatbot.git
-cd jira-ai-chatbot
-````
+git clone https://github.com/yourusername/ai-ops-control-centre.git
+cd ai-ops-control-centre
+```
 
-2. **Install dependencies:**
+### 2️⃣ Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Configure credentials:**
-   Create a file called `config.py` with the following content:
+### 3️⃣ Configure Jira & Model
 
-```python
+Instead of storing credentials in `config.py`, store them in **Streamlit Secrets**:
+Create a `.streamlit/secrets.toml` file:
+
+```toml
 EMAIL = "your-email@example.com"
 API_TOKEN = "your-jira-api-token"
 DOMAIN = "https://your-domain.atlassian.net"
-PROJECT_KEY = "KAN"  # Replace with your actual Jira project key
+PROJECT_KEY = "YOURPROJECT"
 OLLAMA_MODEL = "mistral"
 
-ASSIGNEES = {
-    "user1@example.com": "accountId1",
-    "user2@example.com": "accountId2"
-}
-```
-
-4. **(Optional) Build FAISS index for RAG:**
-
-```bash
-python build_index.py
+ASSIGNEE_EMAILS = [
+    "user1@example.com",
+    "user2@example.com"
+]
 ```
 
 ---
 
 ## 💬 Usage
 
-Run the chatbot:
+Run the app locally:
 
 ```bash
-python chatbot.py
+streamlit run ui_app.py
 ```
+
+Deploy to **Streamlit Cloud**:
+
+* Push code to GitHub
+* Link repo in [share.streamlit.io](https://share.streamlit.io)
+* Add your credentials in Streamlit Cloud → **Secrets**
 
 ---
 
-## 🔧 Commands
-
-| Command                    | Description                                                               |
-| -------------------------- | ------------------------------------------------------------------------- |
-| `help`                     | Show available commands                                                   |
-| `exit` / `quit`            | Exit the chatbot                                                          |
-| `refresh`                  | Reload latest ticket data                                                 |
-| `all`                      | Show all Jira tickets                                                     |
-| `open`                     | Show only open (incomplete) tickets                                       |
-| `closed`                   | Show only completed/closed tickets                                        |
-| `summarize <TICKET_KEY>`   | Show summary and description of a ticket                                  |
-| `analyze <TICKET_KEY>`     | AI-powered analysis for resolution suggestions                            |
-| `comment <TICKET_KEY>`     | AI analysis and auto-comment on Jira ticket                               |
-| `suggest <TICKET_KEY>`     | RAG-based suggestion from similar past tickets                            |
-| `auto assign`              | Assign all unassigned tickets using least-loaded strategy                 |
-| `auto assign <TICKET_KEY>` | Assign a specific ticket to the least-loaded user                         |
-| `ask <natural question>`   | Natural language question → JQL-based filter (e.g., "tickets with login") |
-
----
-
-## 🧪 Examples
-
-```bash
-You > open  
-KAN-102: Database error on user registration  
-
-You > analyze KAN-102  
-🧠 AI Suggestion:  
-Check if DB pool is saturated. Review recent schema changes.
-
-You > comment KAN-102  
-✅ Comment added to KAN-102
-
-You > auto assign  
-✅ Assigned KAN-103 to user1@example.com  
-✅ Assigned KAN-104 to user2@example.com
-
-You > ask tickets with health check failure  
-KAN-105: ELB health probe failing on instance A
-```
-
----
-
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```
-jira-ai-chatbot/
-├── chatbot.py              # CLI chatbot logic
-├── llm_chain.py            # LLM + RAG-based analysis
-├── auto_assign.py          # Workload-based assignment logic
-├── build_index.py          # Builds FAISS index for semantic similarity
-├── rag_utils.py            # Search similar tickets with Sentence Transformers + FAISS
-├── handle_natural_query.py # Natural language → JQL mapping
-├── jira_client.py          # Jira REST API helper functions
-├── config.py               # Your credentials + model settings
-├── ticket_index.faiss      # (Generated) Vector index file
-├── ticket_keys.pkl        # (Generated) Index to ticket mapping
-└── README.md               # Project documentation
+ai-ops-control-centre/
+├── ui_app.py               # Streamlit UI app
+├── chatbot.py               # CLI version
+├── auto_assign.py           # Ticket assignment logic
+├── jira_client.py           # Jira API functions
+├── llm_chain.py             # AI + RAG processing
+├── rag_utils.py             # Similar ticket retrieval
+├── handle_natural_query.py  # Natural language → JQL
+├── config.py                # Loads credentials (from secrets in UI)
+├── requirements.txt         # Python dependencies
+└── README.md                # Project documentation
 ```
-
----
-
-## ⚡ Performance Tips
-
-* ✅ Uses **lazy loading** for FAISS, LangChain, and Ollama to reduce startup time
-* ✅ LLM results are **threaded and cached** for faster reuse
-* ✅ Add `refresh` to reload latest Jira data when needed
 
 ---
 
@@ -152,6 +118,6 @@ jira-ai-chatbot/
 
 **Saumya Mathur**
 
-[LinkedIn](https://www.linkedin.com/in/saumya-mathur-60351a270/)
+[LinkedIn](https://www.linkedin.com/in/saumya-mathur) | [GitHub](https://github.com/saumyaya)
 
-
+---
