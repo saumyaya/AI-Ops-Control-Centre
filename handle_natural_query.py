@@ -1,36 +1,36 @@
-import re
+from query_bank import QUERY_MAP  # your existing query bank dictionary
+from difflib import get_close_matches
+from config import OLLAMA_MODEL
+from langchain_ollama import OllamaLLM
+from langchain_core.prompts import PromptTemplate
 
-def handle_natural_query(user_input):
-    user_input = user_input.lower()
+def handle_natural_query(user_query):
+    # 1. Try exact or close match from query bank first
+    if user_query.lower() in QUERY_MAP:
+        return QUERY_MAP[user_query.lower()]
 
-    if "unassigned" in user_input:
-        return 'assignee is EMPTY'
+    # Close match check
+    close_matches = get_close_matches(user_query.lower(), QUERY_MAP.keys(), n=1, cutoff=0.8)
+    if close_matches:
+        return QUERY_MAP[close_matches[0]]
 
-    elif "high priority" in user_input:
-        return 'priority = High'
+    # 2. Fallback to LLM-to-JQL generation
+    print("💡 No match in query bank — using AI to generate JQL...")
+    llm = OllamaLLM(model=OLLAMA_MODEL)
+    
+    prompt = PromptTemplate.from_template("""
+    You are a Jira expert. Convert the following natural language query into a valid JQL query.
+    Only return the JQL, nothing else.
 
-    elif "open" in user_input and "assigned to" in user_input:
-        name_match = re.search(r'assigned to (\w+)', user_input)
-        if name_match:
-            name = name_match.group(1)
-            return f'statusCategory != Done AND assignee = {name}'
+    Query: {query}
+    """)
 
-    elif "assigned to" in user_input:
-        name_match = re.search(r'assigned to (\w+)', user_input)
-        if name_match:
-            name = name_match.group(1)
-            return f'assignee = {name}'
+    chain = prompt | llm
+    jql = chain.invoke({"query": user_query}).strip()
 
-    elif "status" in user_input:
-        status_match = re.search(r'status is (\w+)', user_input)
-        if status_match:
-            status = status_match.group(1)
-            return f'status = {status}'
+    # Basic validation (optional)
+    if not jql.lower().startswith(("project =", "status", "assignee", "priority", "created", "updated")):
+        print("⚠️ AI generated suspicious JQL, returning None")
+        return None
 
-    elif "health check" in user_input:
-        return 'summary ~ "health check"'
-
-    elif "login" in user_input:
-        return 'summary ~ "login" OR description ~ "login"'
-
-    return None
+    return jql
