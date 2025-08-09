@@ -1,10 +1,16 @@
 import base64
 import requests
-EMAIL = "your-email@example.com"
-API_TOKEN = "your-jira-api-token"
-DOMAIN = "https://your-domain.atlassian.net"
-PROJECT_KEY = "your project key"  
-OLLAMA_MODEL = "mistral"
+import streamlit as st
+
+# Secure config from Streamlit secrets
+EMAIL = st.secrets["EMAIL"]
+API_TOKEN = st.secrets["API_TOKEN"]
+DOMAIN = st.secrets["DOMAIN"]
+PROJECT_KEY = st.secrets["PROJECT_KEY"]
+OLLAMA_MODEL = st.secrets.get("OLLAMA_MODEL", "mistral")
+ASSIGNEE_EMAILS = st.secrets.get("ASSIGNEE_EMAILS", [])
+
+# Auth headers
 AUTH_STRING = f"{EMAIL}:{API_TOKEN}"
 ENCODED_AUTH = base64.b64encode(AUTH_STRING.encode()).decode()
 
@@ -14,26 +20,23 @@ HEADERS = {
     "Accept": "application/json"
 }
 
-
 def get_account_id_by_email(email):
+    """Fetch Jira accountId for a given email."""
     url = f"{DOMAIN}/rest/api/3/user/search"
     params = {"query": email}
     response = requests.get(url, headers=HEADERS, params=params)
 
     if response.status_code != 200:
-        print(f"❌ Failed to fetch user: {response.status_code}, {response.text}")
+        st.error(f"❌ Failed to fetch user {email}: {response.status_code}, {response.text}")
         return None
 
     data = response.json()
     if not data:
-        print(f"❌ No user found for email: {email}")
+        st.warning(f"❌ No user found for email: {email}")
         return None
 
     return data[0]["accountId"]
 
-ASSIGNEE_EMAILS = ["your-email1@example.com", "your-email2@example.com"]
-
-ASSIGNEES = {
-    email: get_account_id_by_email(email)
-    for email in ASSIGNEE_EMAILS
-}
+def build_assignees():
+    """Build and return the assignees mapping only when needed."""
+    return {email: get_account_id_by_email(email) for email in ASSIGNEE_EMAILS}
