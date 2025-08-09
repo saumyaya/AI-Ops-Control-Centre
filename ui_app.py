@@ -1,148 +1,128 @@
 import streamlit as st
 from jira_client import fetch_jira_tickets, add_comment_to_ticket
-from auto_assign import auto_assign_all, auto_assign_ticket_to_least_loaded
+from auto_assign import auto_assign_all, auto_assign_ticket_to_least_loaded, fetch_all_tickets
 from handle_natural_query import handle_natural_query
 
-# Lazy load RAG + LLM
+# Lazy import for RAG & LLM to keep startup fast
 def analyze_ticket_lazy(ticket):
     from llm_chain import analyze_ticket
     return analyze_ticket(ticket)
 
-# Helper to flatten Jira API tickets
-def flatten_tickets(jira_tickets):
-    flat_list = []
-    for t in jira_tickets:
-        summary = t.get("fields", {}).get("summary", "No summary")
-        description = (
-            t.get("fields", {})
-            .get("description", {})
-            .get("content", [{}])[0]
-            .get("content", [{}])[0]
-            .get("text", "")
-        )
-        flat_list.append({
-            "key": t.get("key", ""),
-            "summary": summary,
-            "description": description,
-            "raw": t
-        })
-    return flat_list
+def refresh_tickets():
+    return fetch_jira_tickets(), fetch_all_tickets()
 
-st.set_page_config(page_title="Jira AI Chatbot UI", layout="wide")
-st.title("🤖 Jira AI Chatbot (UI Version)")
-menu = st.sidebar.selectbox(
-    "Choose a Command",
-    [ "All Tickets",
-        "Open Tickets",
-        "Closed Tickets",
-        "Summarize Ticket",
-        "AI Analysis",
-        "Comment",
-        "Suggest Solution",
-        "Auto Assign",
-        "Ask",
-        "Refresh"]
-)
+# --- Streamlit Page Config ---
+st.set_page_config(page_title="Jira AI Chatbot", layout="wide")
+st.title("🤖 Jira AI Chatbot")
+st.caption("A UI version of the CLI chatbot with all commands")
 
+# --- Session State ---
+if "tickets" not in st.session_state or "full_tickets" not in st.session_state:
+    st.session_state.tickets, st.session_state.full_tickets = refresh_tickets()
 
-if menu == "All Tickets":
-    tickets = flatten_tickets(fetch_jira_tickets())
-    for t in tickets:
-        st.subheader(t['key'])  
-        st.write(f"**Summary:** {t['summary']}")
-        st.write(f"**Description:** {t['description']}")
+# --- Tabs for CLI Command Equivalents ---
+tab_all, tab_open, tab_closed, tab_sum, tab_analyze, tab_comment, tab_suggest, tab_assign, tab_ask, tab_refresh = st.tabs([
+    "📋 All", "🟢 Open", "🔴 Closed", "📄 Summarize", "🧠 Analyze", "💬 Comment", "📌 Suggest", "🧑‍💼 Auto Assign", "❓ Ask", "🔄 Refresh"
+])
 
+# --- All Tickets ---
+with tab_all:
+    st.subheader("All Tickets")
+    st.dataframe(st.session_state.tickets)
 
-elif menu == "Open Tickets":
-    tickets = flatten_tickets(fetch_jira_tickets("statusCategory != Done"))
-    for t in tickets:
-        st.subheader(t['key'])  
-        st.write(f"**Summary:** {t['summary']}")
-        st.write(f"**Description:** {t['description']}")
+# --- Open Tickets ---
+with tab_open:
+    st.subheader("Open Tickets")
+    open_tickets = fetch_jira_tickets("statusCategory != Done")
+    st.dataframe(open_tickets)
 
-elif menu == "Closed Tickets":
-    tickets = flatten_tickets(fetch_jira_tickets("statusCategory = Done"))
-    for t in tickets:
-        st.subheader(t['key'])  
-        st.write(f"**Summary:** {t['summary']}")
-        st.write(f"**Description:** {t['description']}")
+# --- Closed Tickets ---
+with tab_closed:
+    st.subheader("Closed Tickets")
+    closed_tickets = fetch_jira_tickets("statusCategory = Done")
+    st.dataframe(closed_tickets)
 
-elif menu == "Summarize Ticket":
-    ticket_key = st.text_input("Enter Ticket Key to Summarize:")
+# --- Summarize ---
+with tab_sum:
+    st.subheader("Summarize Ticket")
+    ticket_key = st.text_input("Enter Ticket Key (Summarize)")
     if st.button("Summarize"):
-        tickets = flatten_tickets(fetch_jira_tickets())
-        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        ticket = next((t for t in st.session_state.tickets if t["key"].lower() == ticket_key.lower()), None)
         if ticket:
             st.write(f"**Summary:** {ticket['summary']}")
             st.write(f"**Description:** {ticket['description']}")
         else:
             st.error("Ticket not found.")
 
-elif menu == "AI Analysis":
-    ticket_key = st.text_input("Enter Ticket Key to Analyze:")
+# --- Analyze ---
+with tab_analyze:
+    st.subheader("AI Analyze Ticket")
+    ticket_key = st.text_input("Enter Ticket Key (Analyze)")
     if st.button("Analyze"):
-        tickets = flatten_tickets(fetch_jira_tickets())
-        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        ticket = next((t for t in st.session_state.full_tickets if t["key"].lower() == ticket_key.lower()), None)
         if ticket:
-            result = analyze_ticket_lazy(ticket['raw'])
-            st.success("AI Suggestion:")
-            st.write(result)
+            with st.spinner("Analyzing..."):
+                suggestion = analyze_ticket_lazy(ticket)
+            st.write("### 🧠 AI Suggestion")
+            st.write(suggestion)
         else:
             st.error("Ticket not found.")
 
-elif menu == "Comment":
-    ticket_key = st.text_input("Enter Ticket Key to Comment:")
-    if st.button("Add Comment"):
-        tickets = flatten_tickets(fetch_jira_tickets())
-        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+# --- Comment ---
+with tab_comment:
+    st.subheader("Comment on Ticket with AI Suggestion")
+    ticket_key = st.text_input("Enter Ticket Key (Comment)")
+    if st.button("Comment"):
+        ticket = next((t for t in st.session_state.full_tickets if t["key"].lower() == ticket_key.lower()), None)
         if ticket:
-            result = analyze_ticket_lazy(ticket['raw'])
-            add_comment_to_ticket(ticket['key'], result)
+            with st.spinner("Generating comment..."):
+                suggestion = analyze_ticket_lazy(ticket)
+            add_comment_to_ticket(ticket['key'], suggestion)
             st.success(f"✅ Comment added to {ticket['key']}")
         else:
             st.error("Ticket not found.")
 
-elif menu =="Suggest Solution":
-    ticket_key = st.text_input("Enter Ticket Key for Suggestions:")
+# --- Suggest (RAG) ---
+with tab_suggest:
+    st.subheader("RAG-based Suggestion")
+    ticket_key = st.text_input("Enter Ticket Key (Suggest)")
     if st.button("Suggest"):
-        tickets = flatten_tickets(fetch_jira_tickets())
-        ticket = next((x for x in tickets if x['key'].lower() == ticket_key.lower()), None)
+        ticket = next((t for t in st.session_state.full_tickets if t["key"].lower() == ticket_key.lower()), None)
         if ticket:
-            result = analyze_ticket_lazy(ticket['raw'])
-            st.success("📌 Suggested Next Steps:")
-            st.write(result)
+            with st.spinner("Retrieving similar tickets and suggesting..."):
+                suggestion = analyze_ticket_lazy(ticket)
+            st.write("### 📌 Suggested Next Steps")
+            st.write(suggestion)
         else:
             st.error("Ticket not found.")
 
-elif menu == "Auto Assign":
-    if st.button("Auto Assign All Unassigned Tickets"):
-        auto_assign_all()
-        st.success("Auto assignment completed.")
+# --- Auto Assign ---
+with tab_assign:
+    st.subheader("Auto Assign Tickets")
+    single_key = st.text_input("Enter Ticket Key (optional)")
+    if st.button("Run Auto Assign"):
+        if single_key:
+            auto_assign_ticket_to_least_loaded(single_key.upper())
+            st.success(f"✅ Assigned {single_key.upper()} to least-loaded user")
+        else:
+            auto_assign_all()
+            st.success("✅ Auto-assigned all unassigned tickets")
 
-    ticket_key = st.text_input("Or enter a Ticket Key to auto-assign:")
-    if st.button("Auto Assign This Ticket"):
-        auto_assign_ticket_to_least_loaded(ticket_key)
-        st.success(f"Auto-assigned {ticket_key}")
-
-elif menu == "Ask":
-    query = st.text_input("Ask a question about tickets:")
+# --- Ask (Natural Language) ---
+with tab_ask:
+    st.subheader("Ask Jira in Natural Language")
+    query = st.text_input("Ask something like: 'Which tickets are unassigned?'")
     if st.button("Run Query"):
         jql = handle_natural_query(query)
         if jql:
-            tickets = flatten_tickets(fetch_jira_tickets(jql))
-            if tickets:
-                for t in tickets:
-                    st.subheader(f"{t['key']} — {t['summary']}")
-                    st.write(t['description'])
-            else:
-                st.warning("No matching tickets found.")
+            results = fetch_jira_tickets(jql)
+            st.dataframe(results)
         else:
-            st.error("Could not understand your query.")
+            st.error("Couldn't understand the query.")
 
-elif menu == "Refresh":
-    st.info("Refreshing ticket data...")
-    st.cache_data.clear()
-    st.success("Refreshed successfully!")
-
-
-
+# --- Refresh ---
+with tab_refresh:
+    st.subheader("Refresh Tickets Data")
+    if st.button("Refresh Now"):
+        st.session_state.tickets, st.session_state.full_tickets = refresh_tickets()
+        st.success("🔄 Ticket data refreshed!")
