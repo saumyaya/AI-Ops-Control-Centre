@@ -33,7 +33,7 @@ st.title("🤖 Jira AI Chatbot (UI Version)")
 menu = st.sidebar.selectbox(
     "Choose a Command",
     [ "All Tickets",
-        "Open Ticets",
+        "Open Tickets",
         "Closed Tickets",
         "Summarize Ticket",
         "AI Analysis",
@@ -53,7 +53,7 @@ if menu == "All Tickets":
         st.write(f"**Description:** {t['description']}")
 
 
-elif menu == "Open Ticets":
+elif menu == "Open Tickets":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory != Done"))
     for t in tickets:
         st.subheader(t['key'])  
@@ -143,5 +143,6 @@ elif menu == "Refresh":
     st.info("Refreshing ticket data...")
     st.cache_data.clear()
     st.success("Refreshed successfully!")
+
 
 
