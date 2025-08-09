@@ -30,43 +30,40 @@ def flatten_tickets(jira_tickets):
 
 st.set_page_config(page_title="Jira AI Chatbot UI", layout="wide")
 st.title("🤖 Jira AI Chatbot (UI Version)")
-
-# Sidebar Menu
-menu = st.sidebar.radio(
-    "📋 Menu",
-    [
-        "📋 All",
-        "🟢 Open",
-        "🔴 Closed",
-        "📄 Summarize",
-        "🧠 Analyze",
-        "💬 Comment",
-        "📌 Suggest",
-        "🧑‍💼 Auto Assign",
-        "❓ Ask",
-        "🔄 Refresh"
-    ]
+menu = st.sidebar.selectbox(
+    "Choose a Command",
+    [ "All Tickets",
+        "Open Ticets",
+        "Closed Tickets",
+        "Summarize Ticket",
+        "AI Analysis",
+        "Comment",
+        "Suggest Solution",
+        "Auto Assign",
+        "Ask",
+        "Refresh"]
 )
 
-if menu == "📋 All":
+
+if menu == "All Tickets":
     tickets = flatten_tickets(fetch_jira_tickets())
     for t in tickets:
         st.subheader(f"{t['key']} — {t['summary']}")
         st.write(t['description'])
 
-elif menu == "🟢 Open":
+elif menu == "Open Ticets":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory != Done"))
     for t in tickets:
         st.subheader(f"{t['key']} — {t['summary']}")
         st.write(t['description'])
 
-elif menu == "🔴 Closed":
+elif menu == "Closed Tickets":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory = Done"))
     for t in tickets:
         st.subheader(f"{t['key']} — {t['summary']}")
         st.write(t['description'])
 
-elif menu == "📄 Summarize":
+elif menu == "Summarize Ticket":
     ticket_key = st.text_input("Enter Ticket Key to Summarize:")
     if st.button("Summarize"):
         tickets = flatten_tickets(fetch_jira_tickets())
@@ -77,7 +74,7 @@ elif menu == "📄 Summarize":
         else:
             st.error("Ticket not found.")
 
-elif menu == "🧠 Analyze":
+elif menu == "AI Analysis":
     ticket_key = st.text_input("Enter Ticket Key to Analyze:")
     if st.button("Analyze"):
         tickets = flatten_tickets(fetch_jira_tickets())
@@ -89,7 +86,7 @@ elif menu == "🧠 Analyze":
         else:
             st.error("Ticket not found.")
 
-elif menu == "💬 Comment":
+elif menu == "Comment":
     ticket_key = st.text_input("Enter Ticket Key to Comment:")
     if st.button("Add Comment"):
         tickets = flatten_tickets(fetch_jira_tickets())
@@ -101,7 +98,7 @@ elif menu == "💬 Comment":
         else:
             st.error("Ticket not found.")
 
-elif menu == "📌 Suggest":
+elif menu =="Suggest Solution":
     ticket_key = st.text_input("Enter Ticket Key for Suggestions:")
     if st.button("Suggest"):
         tickets = flatten_tickets(fetch_jira_tickets())
@@ -113,7 +110,7 @@ elif menu == "📌 Suggest":
         else:
             st.error("Ticket not found.")
 
-elif menu == "🧑‍💼 Auto Assign":
+elif menu == "Auto Assign":
     if st.button("Auto Assign All Unassigned Tickets"):
         auto_assign_all()
         st.success("Auto assignment completed.")
@@ -123,7 +120,7 @@ elif menu == "🧑‍💼 Auto Assign":
         auto_assign_ticket_to_least_loaded(ticket_key)
         st.success(f"Auto-assigned {ticket_key}")
 
-elif menu == "❓ Ask":
+elif menu == "Ask":
     query = st.text_input("Ask a question about tickets:")
     if st.button("Run Query"):
         jql = handle_natural_query(query)
@@ -138,7 +135,8 @@ elif menu == "❓ Ask":
         else:
             st.error("Could not understand your query.")
 
-elif menu == "🔄 Refresh":
+elif menu == "Refresh":
     st.info("Refreshing ticket data...")
     st.cache_data.clear()
     st.success("Refreshed successfully!")
+
