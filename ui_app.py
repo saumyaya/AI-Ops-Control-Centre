@@ -56,7 +56,7 @@ elif command == "Summarize Ticket":
     if st.button("Summarize"):
         tickets = fetch_jira_tickets(f"key = {key}")
         if tickets:
-            ticket = tickets[0]
+            ticket = tickets[0]['raw']
             st.write(f"Summary: {ticket['summary']}")
             st.write(f"Description: {ticket['description']}")
         else:
@@ -68,7 +68,7 @@ elif command == "Analyze Ticket":
     if st.button("Analyze"):
         tickets = fetch_jira_tickets(f"key = {key}")
         if tickets:
-            ticket = tickets[0]
+            ticket = tickets[0]['raw']
             try:
                 result = analyze_ticket_lazy(ticket)
                 st.success("AI Suggestion:")
@@ -84,7 +84,7 @@ elif command == "Comment on Ticket":
     if st.button("Analyze & Comment"):
         tickets = fetch_jira_tickets(f"key = {key}")
         if tickets:
-            ticket = tickets[0]
+            ticket = tickets[0]['raw']
             result = analyze_ticket_lazy(ticket)
             add_comment_to_ticket(ticket['key'], result)
             st.success(f"Comment added to {ticket['key']}")
@@ -97,7 +97,7 @@ elif command == "Suggest Next Steps":
     if st.button("Suggest"):
         tickets = fetch_jira_tickets(f"key = {key}")
         if tickets:
-            ticket = tickets[0]
+            ticket = tickets[0]['raw']
             try:
                 result = analyze_ticket_lazy(ticket)
                 st.info("Suggested Next Steps:")
@@ -133,3 +133,4 @@ elif command == "Ask Natural Query":
                 st.warning("No matching tickets found.")
         else:
             st.error("Could not understand query.")
+
