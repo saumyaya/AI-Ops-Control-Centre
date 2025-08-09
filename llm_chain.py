@@ -1,4 +1,8 @@
 def analyze_ticket(ticket):
+    # Handle flattened tickets from CLI
+    if 'raw' in ticket:  
+        ticket = ticket['raw']
+
     # Lazy imports
     from langchain_ollama import OllamaLLM
     from langchain_core.prompts import PromptTemplate
@@ -23,15 +27,22 @@ def analyze_ticket(ticket):
     """)
     chain = prompt | llm
 
-    # Extract current ticket info
-    summary = ticket['fields'].get('summary', '')
-    description = (
-        ticket['fields'].get('description', {})
-        .get('content', [{}])[0]
-        .get('content', [{}])[0]
-        .get('text', '')
-    )
-    query = summary + " " + description
+    # Extract ticket details (safe for both formats)
+    fields = ticket.get('fields', {})
+    summary = fields.get('summary', ticket.get('summary', ''))
+    description = ""
+
+    if 'fields' in ticket:  # Jira API format
+        description = (
+            fields.get('description', {})
+            .get('content', [{}])[0]
+            .get('content', [{}])[0]
+            .get('text', '')
+        )
+    else:  # Flattened format
+        description = ticket.get('description', '')
+
+    query = f"{summary} {description}"
 
     # Retrieve and filter similar tickets
     similar_keys = retrieve_similar_tickets(query)
@@ -41,18 +52,25 @@ def analyze_ticket(ticket):
     # Build similarity context
     context = ""
     for t in similar_tickets:
-        ctx_summary = t['fields'].get('summary', '')
-        ctx_description = (
-            t['fields'].get('description', {})
-            .get('content', [{}])[0]
-            .get('content', [{}])[0]
-            .get('text', '')
-        )
+        ctx_fields = t.get('fields', {})
+        ctx_summary = ctx_fields.get('summary', t.get('summary', ''))
+        ctx_description = ""
+
+        if 'fields' in t:
+            ctx_description = (
+                ctx_fields.get('description', {})
+                .get('content', [{}])[0]
+                .get('content', [{}])[0]
+                .get('text', '')
+            )
+        else:
+            ctx_description = t.get('description', '')
+
         context += f"\nTicket: {t['key']}\nSummary: {ctx_summary}\nDescription: {ctx_description}\n---"
 
     # Invoke chain
     return chain.invoke({
-        "key": ticket['key'],
+        "key": ticket.get('key', ''),
         "summary": summary,
         "description": description,
         "context": context
