@@ -48,20 +48,24 @@ menu = st.sidebar.selectbox(
 if menu == "All Tickets":
     tickets = flatten_tickets(fetch_jira_tickets())
     for t in tickets:
-        st.subheader(f"{t['key']} — {t['summary']}")
-        st.write(t['description'])
+        st.subheader(t['key'])  
+        st.write(f"**Summary:** {t['summary']}")
+        st.write(f"**Description:** {t['description']}")
+
 
 elif menu == "Open Ticets":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory != Done"))
     for t in tickets:
-        st.subheader(f"{t['key']} — {t['summary']}")
-        st.write(t['description'])
+        st.subheader(t['key'])  
+        st.write(f"**Summary:** {t['summary']}")
+        st.write(f"**Description:** {t['description']}")
 
 elif menu == "Closed Tickets":
     tickets = flatten_tickets(fetch_jira_tickets("statusCategory = Done"))
     for t in tickets:
-        st.subheader(f"{t['key']} — {t['summary']}")
-        st.write(t['description'])
+        st.subheader(t['key'])  
+        st.write(f"**Summary:** {t['summary']}")
+        st.write(f"**Description:** {t['description']}")
 
 elif menu == "Summarize Ticket":
     ticket_key = st.text_input("Enter Ticket Key to Summarize:")
@@ -139,4 +143,5 @@ elif menu == "Refresh":
     st.info("Refreshing ticket data...")
     st.cache_data.clear()
     st.success("Refreshed successfully!")
+
 
