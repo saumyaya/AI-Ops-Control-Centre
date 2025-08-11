@@ -1,7 +1,6 @@
-def safe_get_description(fields):
+def safe_get_description(desc):
     """Safely extract Jira ticket description as plain text."""
-    desc = fields.get('description')
-    if not desc:
+    if not isinstance(desc, dict):
         return ""
     try:
         return (
@@ -12,8 +11,9 @@ def safe_get_description(fields):
     except (AttributeError, IndexError, KeyError):
         return ""
 
+
 def analyze_ticket(ticket):
-    # Handle flattened tickets from CLI
+    # Handle flattened tickets from CLI/UI
     if 'raw' in ticket:  
         ticket = ticket['raw']
 
@@ -41,38 +41,30 @@ def analyze_ticket(ticket):
     """)
     chain = prompt | llm
 
-    # Extract ticket details (safe for both formats)
+    # Extract ticket details safely
     fields = ticket.get('fields', {})
     summary = fields.get('summary', ticket.get('summary', ''))
-    description = ""
 
-    
     if 'fields' in ticket:  # Jira API format
-        description = safe_extract_description(fields.get('description'))
+        description = safe_get_description(fields.get('description'))
     else:  # Flattened format
         description = ticket.get('description', '')
-        
-    query = f"{summary} {description}"
+
+    query = f"{summary} {description}".strip()
 
     # Retrieve and filter similar tickets
     similar_keys = retrieve_similar_tickets(query)
     all_tickets = fetch_all_tickets()
     similar_tickets = [t for t in all_tickets if t['key'] in similar_keys]
 
-    # Build similarity context
+    # Build similarity context safely
     context = ""
     for t in similar_tickets:
         ctx_fields = t.get('fields', {})
         ctx_summary = ctx_fields.get('summary', t.get('summary', ''))
-        ctx_description = ""
 
         if 'fields' in t:
-            ctx_description = (
-                ctx_fields.get('description', {})
-                .get('content', [{}])[0]
-                .get('content', [{}])[0]
-                .get('text', '')
-            )
+            ctx_description = safe_get_description(ctx_fields.get('description'))
         else:
             ctx_description = t.get('description', '')
 
@@ -85,4 +77,3 @@ def analyze_ticket(ticket):
         "description": description,
         "context": context
     })
-
