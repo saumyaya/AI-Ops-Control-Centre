@@ -1,3 +1,17 @@
+def safe_get_description(fields):
+    """Safely extract Jira ticket description as plain text."""
+    desc = fields.get('description')
+    if not desc:
+        return ""
+    try:
+        return (
+            desc.get('content', [{}])[0]
+            .get('content', [{}])[0]
+            .get('text', '')
+        )
+    except (AttributeError, IndexError, KeyError):
+        return ""
+
 def analyze_ticket(ticket):
     # Handle flattened tickets from CLI
     if 'raw' in ticket:  
@@ -32,16 +46,12 @@ def analyze_ticket(ticket):
     summary = fields.get('summary', ticket.get('summary', ''))
     description = ""
 
+    
     if 'fields' in ticket:  # Jira API format
-        description = (
-            fields.get('description', {})
-            .get('content', [{}])[0]
-            .get('content', [{}])[0]
-            .get('text', '')
-        )
+        description = safe_extract_description(fields.get('description'))
     else:  # Flattened format
         description = ticket.get('description', '')
-
+        
     query = f"{summary} {description}"
 
     # Retrieve and filter similar tickets
@@ -75,3 +85,4 @@ def analyze_ticket(ticket):
         "description": description,
         "context": context
     })
+
