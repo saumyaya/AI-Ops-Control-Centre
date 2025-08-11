@@ -46,7 +46,6 @@ def get_ticket_counts_by_user():
 
     for t in tickets:
         assignee = t.get("fields", {}).get("assignee")
-def get_ticket_counts_by_user():
     return counts
 
 def pick_least_loaded_user():
@@ -68,4 +67,5 @@ def auto_assign_ticket_to_least_loaded(ticket_key):
         account_id = assignees.get_account_id(least_loaded_email)
         if account_id:
             assign_ticket(ticket_key, account_id)
+
 
