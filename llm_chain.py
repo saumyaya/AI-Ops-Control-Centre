@@ -18,14 +18,15 @@ def analyze_ticket(ticket):
         ticket = ticket['raw']
 
     # Lazy imports
+    import streamlit as st
     from langchain_ollama import OllamaLLM
     from langchain_core.prompts import PromptTemplate
     from config import OLLAMA_MODEL
     from rag_utils import retrieve_similar_tickets
     from auto_assign import fetch_all_tickets
-
+    OLLAMA_BASE_URL = st.secrets.get("OLLAMA_BASE_URL", "http://localhost:11434")
     # Initialize model and chain
-    llm = OllamaLLM(model=OLLAMA_MODEL)
+    llm = OllamaLLM(model=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL)
     prompt = PromptTemplate.from_template("""
     You are an AI assistant helping with Jira tickets.
 
@@ -77,3 +78,4 @@ def analyze_ticket(ticket):
         "description": description,
         "context": context
     })
+
