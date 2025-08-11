@@ -65,6 +65,7 @@ def auto_assign_ticket_to_least_loaded(ticket_key):
     assignees = build_assignees()
     least_loaded_email = pick_least_loaded_user()
     if least_loaded_email:
-        account_id = assignees.get(least_loaded_email)
+        account_id = assignees.get_account_id(least_loaded_email)
         if account_id:
             assign_ticket(ticket_key, account_id)
+
