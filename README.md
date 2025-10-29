@@ -113,6 +113,23 @@ ai-ops-control-centre/
 ```
 
 ---
+## 📝 Author’s Note
+
+This project is built using Ollama, meaning all AI features run locally on your machine. If you attempt to deploy this project (for example, on Streamlit Cloud or another hosting service), the AI-powered functionality will not work, since Ollama requires a local runtime environment.
+
+Please note that the current Streamlit deployment is for educational purposes only — it demonstrates the app’s structure and interface, but the AI components are inactive in that environment.
+
+## 💡 Scope for Improvement
+
+* Integrate a Remote LLM API: Replace local Ollama calls with a cloud-based API (e.g., OpenAI, Anthropic, or Hugging Face) to enable online deployment.
+
+* Add a Configurable Backend: Let users toggle between local (Ollama) and remote (API-based) modes using environment variables.
+
+* Use a Proxy Service: Run a small local server that communicates with Ollama and can be connected to a remote app via secure tunneling (e.g., ngrok).
+
+* Model Management Tools: Include scripts to easily download or switch between Ollama models.
+
+* Improved Setup Documentation: Provide step-by-step installation and configuration instructions for both local and educational (deployed) use cases.
 
 ## 👩‍💻 Author
 
